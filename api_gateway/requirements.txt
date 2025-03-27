@@ -1,0 +1,9 @@
+flask
+requests
+sqlalchemy
+psycopg2-binary
+PyPDF2
+python-pptx
+celery
+redis
+flask-cors

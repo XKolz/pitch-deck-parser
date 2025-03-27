@@ -1,0 +1,7 @@
+celery
+redis
+# PyPDF2
+PyMuPDF
+python-pptx
+sqlalchemy
+psycopg2-binary

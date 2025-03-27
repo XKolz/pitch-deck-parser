@@ -1,0 +1,43 @@
+version: "3.9"
+
+services:
+  api_gateway:
+    build:
+      context: .
+      dockerfile: api_gateway/Dockerfile
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./uploads:/app/uploads
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - parser_service
+
+  parser_service:
+    build:
+      context: .
+      dockerfile: parser_service/Dockerfile
+    volumes:
+      - ./uploads:/app/uploads
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - db
+
+  db:
+    image: postgres:14
+    environment:
+      POSTGRES_DB: pitchdeck
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:latest
+
+volumes:
+  pgdata:
