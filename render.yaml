@@ -1,96 +1,37 @@
-# services:
-#   - type: web
-#     name: api-gateway
-#     env: docker
-#     repo: https://github.com/XKolz/pitch-deck-parser
-#     region: oregon
-#     branch: main
-#     dockerfilePath: api_gateway/Dockerfile
-#     buildCommand: ""
-#     startCommand: "python app.py"
-#     envVars:
-#       - key: DB_URL
-#         fromDatabase:
-#           name: pitchdeck-db
-#           property: connectionString
-#       - key: REDIS_URL
-#         fromService:
-#           name: pitchdeck-redis
-#           type: redis
-
-#   - type: worker
-#     name: parser-service
-#     env: docker
-#     repo: https://github.com/XKolz/pitch-deck-parser
-#     region: oregon
-#     branch: main
-#     dockerfilePath: parser_service/Dockerfile
-#     buildCommand: ""
-#     startCommand: "celery -A tasks worker --loglevel=info"
-#     envVars:
-#       - key: DB_URL
-#         fromDatabase:
-#           name: pitchdeck-db
-#           property: connectionString
-#       - key: REDIS_URL
-#         fromService:
-#           name: pitchdeck-redis
-#           type: redis
-
-# databases:
-#   - name: pitchdeck-db
-#     region: oregon
-#     plan: free
-
-# redis:
-#   - name: pitchdeck-redis
-#     region: oregon
-#     plan: free
 services:
-  - type: web
-    name: api-gateway
+  - name: api-gateway
+    type: web
     env: docker
+    plan: free
     repo: https://github.com/XKolz/pitch-deck-parser
+    region: oregon
     dockerfilePath: api_gateway/Dockerfile
-    buildCommand: ""
-    startCommand: python app.py
-    plan: free
+    buildFilter:
+      paths:
+        - api_gateway/**
     envVars:
       - key: DB_URL
-        fromService:
-          name: pitchdeck-db
-          type: postgres
-          property: connectionString
-      - key: REDIS_URL
-        fromService:
-          name: pitchdeck-redis
-          type: redis
-          property: connectionString
+        value: postgres://user:password@pitchdeck-db:5432/pitchdeck
+      - key: CELERY_BROKER_URL
+        value: redis://pitchdeck-redis:6379/0
 
-  - type: worker
-    name: parser-service
+  - name: parser-service
+    type: worker
     env: docker
-    repo: https://github.com/XKolz/pitch-deck-parser
-    dockerfilePath: parser_service/Dockerfile
-    startCommand: celery -A tasks worker --loglevel=info
     plan: free
+    repo: https://github.com/XKolz/pitch-deck-parser
+    region: oregon
+    dockerfilePath: parser_service/Dockerfile
+    buildFilter:
+      paths:
+        - parser_service/**
     envVars:
       - key: DB_URL
-        fromService:
-          name: pitchdeck-db
-          type: postgres
-          property: connectionString
-      - key: REDIS_URL
-        fromService:
-          name: pitchdeck-redis
-          type: redis
-          property: connectionString
+        value: postgres://user:password@pitchdeck-db:5432/pitchdeck
+      - key: CELERY_BROKER_URL
+        value: redis://pitchdeck-redis:6379/0
 
 databases:
   - name: pitchdeck-db
-    plan: free
     databaseName: pitchdeck
     user: user
-
-  - name: pitchdeck-redis
-    plan: free
