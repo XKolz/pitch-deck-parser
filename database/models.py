@@ -5,15 +5,19 @@ Base = declarative_base()
 
 class Document(Base):
     __tablename__ = 'documents'
+
     id = Column(Integer, primary_key=True)
     filename = Column(String, nullable=False)
-    slides = relationship("Slide", back_populates="document")
+
+    slides = relationship("Slide", back_populates="document", cascade="all, delete-orphan")
 
 class Slide(Base):
     __tablename__ = 'slides'
+
     id = Column(Integer, primary_key=True)
-    document_id = Column(Integer, ForeignKey('documents.id'))
+    document_id = Column(Integer, ForeignKey('documents.id'), nullable=False)
     slide_number = Column(Integer)
     title = Column(String(255))
     content = Column(Text)
+
     document = relationship("Document", back_populates="slides")

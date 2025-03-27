@@ -5,7 +5,9 @@ from flask_cors import CORS
 from werkzeug.utils import secure_filename
 from celery import Celery
 from database.models import Slide
+from database.models import Document
 from database.db import SessionLocal 
+import requests
 
 # --- App and Config ---
 app = Flask(__name__)
@@ -17,7 +19,6 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # --- Celery Config ---
-# celery_app = Celery('tasks', broker='redis://redis:6379/0')
 REDIS_URL = os.getenv("REDIS_URL")
 celery_app = Celery('tasks', broker=REDIS_URL)
 
@@ -53,10 +54,62 @@ def upload_file():
     file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     file.save(file_path)
 
-    document_id = str(uuid.uuid4())
+    # document_id = str(uuid.uuid4())
+        # Create Document record
+    session = SessionLocal()
+    try:
+        document = Document(filename=filename)
+        session.add(document)
+        session.commit()
+        session.refresh(document)  # populate the ID
+        document_id = document.id
+    except Exception as e:
+        session.rollback()
+        return jsonify({'error': f'Database error: {str(e)}'}), 500
+    finally:
+        session.close()
+
     celery_app.send_task('tasks.parse_file_task', args=[file_path, document_id])
 
     return jsonify({'message': 'File uploaded and sent for processing.', 'document_id': document_id}), 200
+
+@app.route('/upload-url', methods=['POST'])
+def upload_from_url():
+    data = request.get_json()
+    file_url = data.get('file_url')
+
+    if not file_url:
+        return jsonify({'error': 'Missing file_url'}), 400
+
+    try:
+        # Generate unique filename
+        filename = f"{uuid.uuid4()}.pdf"
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+
+        # Download file from UploadThing to your server
+        response = requests.get(file_url)
+        with open(file_path, 'wb') as f:
+            f.write(response.content)
+
+        # Create Document record
+        session = SessionLocal()
+        document = Document(filename=filename)
+        session.add(document)
+        session.commit()
+        session.refresh(document)
+        document_id = document.id
+
+    except Exception as e:
+        session.rollback()
+        return jsonify({'error': f'File download or DB error: {str(e)}'}), 500
+    finally:
+        session.close()
+
+    # Kick off background task
+    celery_app.send_task('tasks.parse_file_task', args=[file_path, document_id])
+
+    return jsonify({'message': 'UploadThing file received & processing started.', 'document_id': document_id}), 200
+
 
 @app.route('/slides', methods=['GET'])
 def get_all_slides():

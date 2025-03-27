@@ -10,3 +10,4 @@ COPY api_gateway .
 COPY database ./database
 
 CMD ["python", "app.py"]
+# CMD ["python", "init_db.py"]
