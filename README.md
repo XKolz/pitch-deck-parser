@@ -1,67 +1,3 @@
-mkdir pitch-deck-parser
-cd pitch-deck-parser
-
-mkdir api parser db
-touch docker-compose.yml
-
-### 📁 README.md
-
-# Pitch Deck Parser (Backend Assessment)
-
-## Overview
-
-Flask-based app to upload and parse pitch decks (PDF/PPTX), using Celery + Redis for background processing, and PostgreSQL for storage.
-
-## How to Run
-
-```bash
-docker compose up --build
-```
-
-## Upload API
-
-POST `/upload`
-
-- Form-Data: `file` = .pdf or .pptx
-
-Uploads the file, stores it locally, and queues a background parsing task.
-
-## Tech Stack
-
-- Flask
-- Celery + Redis
-- PostgreSQL
-- Docker Compose
-
-<!--  -->
-
-Your system:
-
-✅ Accepted a file via the Flask API
-✅ Saved it to the uploads/ folder
-✅ Sent the task to Celery via Redis
-✅ Parsed the file (beautiful log from parser_service)
-✅ Logged the extracted data correctly
-✅ And no errors anywhere — chef’s kiss 👨‍🍳💻
-
-### 🛠 Option 1: Drop the table manually in Postgres
-
-Open a terminal into your database container:
-docker exec -it pitch-deck-parser-db-1 psql -U user -d pitchdeck
-DROP TABLE slides;
-
-docker compose down
-docker compose up --build
-
-## To quickly visualize the top two levels of your folder structure.
-
-tree -L 2
-
-Got you! Here's a complete, professional `README.md` tailored for your Flask-based pitch deck parser project with Docker Compose, Render deployment, Redis (Upstash), and separate services:
-
----
-
-````md
 # Pitch Deck Parser API
 
 A full-stack web application that parses pitch decks (PDF or PPTX), extracts slide data, and presents them on a dashboard. This project is composed of multiple backend services, including an API gateway, a document parser, Redis for task handling, and PostgreSQL or MongoDB for persistent storage.
@@ -90,6 +26,7 @@ A full-stack web application that parses pitch decks (PDF or PPTX), extracts sli
 ├── docker-compose.yml    # Compose configuration
 └── README.md
 ```
+
 ````
 
 ---
@@ -111,18 +48,15 @@ A full-stack web application that parses pitch decks (PDF or PPTX), extracts sli
 Create a `.env` file in the project root with:
 
 ```env
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=postgres
-POSTGRES_DB=pitchdeck
-REDIS_URL=redis://<your-upstash-redis-url>
-PARSER_SERVICE_URL=http://parser_service:5001
+DB_URL=
+REDIS_URL=redis://<your-upstash-redis-url> (For production)
 ```
 
 > Use the same Redis URL in both `api_gateway` and `parser_service`.
 
 ---
 
-### 🐳 Run with Docker Compose (Local)
+### Run with Docker Compose (Local)
 
 ```bash
 # Build and run all services
@@ -132,29 +66,9 @@ docker-compose up --build
 Services:
 
 - API Gateway → http://localhost:5000
-- Parser Service → http://localhost:5001
+- Parser Service →
 - PostgreSQL → localhost:5432
 - Redis (via Upstash)
-
----
-
-## 🧪 Running Tests
-
-If you have test suites (e.g. Pytest), you can run:
-
-```bash
-docker exec -it api_gateway bash
-pytest
-```
-
-Or run locally using your Python environment with:
-
-```bash
-cd api_gateway
-pytest
-```
-
----
 
 ## 📮 API Routes
 
@@ -178,28 +92,9 @@ pytest
 }
 ```
 
----
+### 2. **List Parsed Decks**
 
-### 2. **Get Task Status**
-
-**Endpoint:** `GET /status/<task_id>`
-
-**Description:** Checks the status of a background parsing task.
-
-**Response:**
-
-```json
-{
-  "status": "PENDING" | "SUCCESS" | "FAILURE",
-  "result": {...}  // if successful
-}
-```
-
----
-
-### 3. **List Parsed Decks**
-
-**Endpoint:** `GET /decks`
+**Endpoint:** `GET /slides`
 
 **Description:** Returns a list of parsed pitch decks with metadata.
 
@@ -219,7 +114,7 @@ pytest
 
 ### 4. **Get Deck Details**
 
-**Endpoint:** `GET /decks/<id>`
+**Endpoint:** `GET /slides/<id>`
 
 **Description:** Returns slides and extracted content of a single deck.
 
@@ -231,40 +126,25 @@ pytest
 
 Each service is deployed independently using Render’s **Docker** deployment method.
 
-1. Push each service (e.g., `api_gateway`, `parser_service`) to a separate GitHub repo.
-2. Connect each repo to a **Render Web Service**.
-3. Configure build & start commands:
-
-**Example for API Gateway:**
-
-- **Dockerfile Path:** `/api_gateway/Dockerfile`
-- **Build Command:** _Leave blank_
-- **Start Command:** `gunicorn app:app -b 0.0.0.0:5000`
-
-4. Set environment variables in the Render dashboard.
+1. Push each service (e.g., `api_gateway`, `parser_service`) to one GitHub repo.
+2. Set environment variables in the Render dashboard.
 
 ---
 
-## 📎 Notes
+## Notes for  me... lol
+<!--  -->
 
-- For production, ensure HTTPS and security configurations (rate limiting, input validation, etc.)
-- You can switch between PostgreSQL and MongoDB by adjusting the parser and database models.
+### 🛠 Option 1: Drop the table manually in Postgres
+Open a terminal into your database container:
+docker exec -it pitch-deck-parser-db-1 psql -U user -d pitchdeck
+DROP TABLE slides;
 
----
+## run docker
 
-## 👨‍💻 Author
+docker compose down
+docker compose up --build
 
-Samuel – Backend Specialist | Full-Stack Developer
-
----
-
-## 📃 License
-
-MIT License
-
-```
-
----
-
-Let me know if you want to customize this further for PostgreSQL vs MongoDB, Celery retries, or if you want to generate OpenAPI docs as well.
-```
+## To quickly visualize the top two levels of your folder structure.
+tree -L 2
+<!--  -->
+````
