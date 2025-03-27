@@ -50,6 +50,9 @@ Create a `.env` file in the project root with:
 ```env
 DB_URL=
 REDIS_URL=redis://<your-upstash-redis-url> (For production)
+## for testing:
+REDIS_URL=redis://redis:6379/0
+DB_URL=postgresql://user:password@db:5432/pitchdeck
 ```
 
 > Use the same Redis URL in both `api_gateway` and `parser_service`.
