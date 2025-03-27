@@ -15,10 +15,9 @@ from parser import parse_document
 
 # Load Redis URL from .env
 REDIS_URL = os.getenv("REDIS_URL")
-print(REDIS_URL)
 
 app = Celery('tasks', broker=REDIS_URL)
 
-@app.taskxw
+@app.task
 def parse_file_task(file_path, document_id):
     return parse_document(file_path, document_id)
