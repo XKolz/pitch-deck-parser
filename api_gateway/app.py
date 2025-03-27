@@ -17,7 +17,9 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # --- Celery Config ---
-celery_app = Celery('tasks', broker='redis://redis:6379/0')
+# celery_app = Celery('tasks', broker='redis://redis:6379/0')
+REDIS_URL = os.getenv("REDIS_URL")
+celery_app = Celery('tasks', broker=REDIS_URL)
 
 # --- Helpers ---
 def allowed_file(filename):
